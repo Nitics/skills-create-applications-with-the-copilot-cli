@@ -3,7 +3,8 @@
 
 const readline = require('node:readline');
 
-// Supported operations: addition (+), subtraction (-), multiplication (* or ×), and division (/ or ÷).
+// Supported operations: addition (+), subtraction (-), multiplication (* or ×),
+// division (/ or ÷), modulo (%), exponentiation (**), and square root (sqrt).
 const operations = {
   '+': (left, right) => left + right,
   '-': (left, right) => left - right,
@@ -11,30 +12,50 @@ const operations = {
   '×': (left, right) => left * right,
   '/': (left, right) => left / right,
   '÷': (left, right) => left / right,
+  '%': (left, right) => left % right,
+  '**': (left, right) => left ** right,
 };
+const supportedOperations = [...Object.keys(operations), 'sqrt'];
 
 function calculate(left, operator, right) {
-  if (!Number.isFinite(left) || !Number.isFinite(right)) {
-    throw new Error('Both operands must be valid finite numbers.');
+  if (!supportedOperations.includes(operator)) {
+    throw new Error(`Choose one of the supported operations: ${supportedOperations.join(', ')}.`);
   }
 
-  const operation = operations[operator];
-  if (!operation) {
-    throw new Error('Choose one of the supported operations: +, -, *, or /.');
+  if (!Number.isFinite(left)) {
+    throw new Error('Operands must be valid finite numbers.');
+  }
+
+  if (operator === 'sqrt') {
+    if (left < 0) {
+      throw new Error('Cannot take the square root of a negative number.');
+    }
+    return Math.sqrt(left);
+  }
+
+  if (!Number.isFinite(right)) {
+    throw new Error('Operands must be valid finite numbers.');
   }
 
   if ((operator === '/' || operator === '÷') && right === 0) {
     throw new Error('Cannot divide by zero.');
   }
+  if (operator === '%' && right === 0) {
+    throw new Error('Cannot modulo by zero.');
+  }
 
-  return operation(left, right);
+  const result = operations[operator](left, right);
+  if (!Number.isFinite(result)) {
+    throw new Error('The result must be a valid finite number.');
+  }
+  return result;
 }
 
 function parseOperand(input) {
   const trimmed = input.trim();
   const value = Number(trimmed);
   if (!trimmed || !Number.isFinite(value)) {
-    throw new Error('Both operands must be valid finite numbers.');
+    throw new Error('Operands must be valid finite numbers.');
   }
   return value;
 }
@@ -60,9 +81,18 @@ function main() {
       if (step === 0) {
         left = parseOperand(input);
         step = 1;
-        ask('Operation (+, -, *, /): ');
+        ask('Operation (+, -, *, /, %, **, sqrt): ');
       } else if (step === 1) {
         operator = input.trim();
+        if (operator === 'sqrt') {
+          console.log(`Result: ${calculate(left, operator)}`);
+          completed = true;
+          prompt.close();
+          return;
+        }
+        if (!supportedOperations.includes(operator)) {
+          throw new Error(`Choose one of the supported operations: ${supportedOperations.join(', ')}.`);
+        }
         step = 2;
         ask('Second number: ');
       } else {
