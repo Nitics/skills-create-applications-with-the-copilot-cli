@@ -2,9 +2,67 @@
 
 const { spawnSync } = require('node:child_process');
 const path = require('node:path');
-const { calculate } = require('../calculator');
+const { calculate, modulo, power, squareRoot } = require('../calculator');
 
 const calculatorPath = path.join(__dirname, '..', 'calculator.js');
+
+describe('modulo', () => {
+  test('returns the example remainder from the image', () => {
+    expect(modulo(5, 2)).toBe(1);
+  });
+
+  test('returns the remainder of the first operand divided by the second', () => {
+    expect(modulo(10, 3)).toBe(1);
+    expect(modulo(-10, 3)).toBe(-1);
+  });
+
+  test('rejects division by zero and non-finite operands', () => {
+    expect(() => modulo(1, 0)).toThrow('Cannot modulo by zero.');
+    expect(() => modulo(Infinity, 2)).toThrow(
+      'Operands must be valid finite numbers.'
+    );
+  });
+});
+
+describe('power', () => {
+  test('returns the example power from the image', () => {
+    expect(power(2, 3)).toBe(8);
+  });
+
+  test('raises the base to the given exponent', () => {
+    expect(power(2, 3)).toBe(8);
+    expect(power(9, 0.5)).toBe(3);
+  });
+
+  test('rejects non-finite operands and results', () => {
+    expect(() => power(Infinity, 2)).toThrow(
+      'Operands must be valid finite numbers.'
+    );
+    expect(() => power(10, 1000)).toThrow(
+      'The result must be a valid finite number.'
+    );
+  });
+});
+
+describe('squareRoot', () => {
+  test('returns the example square root from the image', () => {
+    expect(squareRoot(16)).toBe(4);
+  });
+
+  test('returns the square root of a non-negative number', () => {
+    expect(squareRoot(25)).toBe(5);
+    expect(squareRoot(0)).toBe(0);
+  });
+
+  test('rejects negative and non-finite inputs', () => {
+    expect(() => squareRoot(-1)).toThrow(
+      'Cannot take the square root of a negative number.'
+    );
+    expect(() => squareRoot(Infinity)).toThrow(
+      'Operands must be valid finite numbers.'
+    );
+  });
+});
 
 describe('calculate', () => {
   describe('addition', () => {
@@ -166,6 +224,7 @@ describe('CLI', () => {
     ['10', '-', '4', 6],
     ['45', '*', '2', 90],
     ['20', '/', '5', 4],
+    ['5', '%', '2', 1],
     ['10', '%', '3', 1],
     ['2', '**', '3', 8],
   ])('prints the result for %s %s %s', (left, operator, right, result) => {
@@ -180,15 +239,15 @@ describe('CLI', () => {
     expect(cli.stderr).toBe('');
   });
 
-  test('takes one operand for square root', () => {
+  test('takes one operand for the square root example from the image', () => {
     const cli = spawnSync(
       process.execPath,
       [calculatorPath],
-      { input: '25\nsqrt\n', encoding: 'utf8' }
+      { input: '16\nsqrt\n', encoding: 'utf8' }
     );
 
     expect(cli.status).toBe(0);
-    expect(cli.stdout).toContain('Result: 5');
+    expect(cli.stdout).toContain('Result: 4');
     expect(cli.stdout).not.toContain('Second number:');
     expect(cli.stderr).toBe('');
   });

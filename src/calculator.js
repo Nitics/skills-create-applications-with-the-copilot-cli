@@ -5,6 +5,40 @@ const readline = require('node:readline');
 
 // Supported operations: addition (+), subtraction (-), multiplication (* or ×),
 // division (/ or ÷), modulo (%), exponentiation (**), and square root (sqrt).
+function validateFiniteOperands(...values) {
+  if (!values.every(Number.isFinite)) {
+    throw new Error('Operands must be valid finite numbers.');
+  }
+}
+
+function validateFiniteResult(result) {
+  if (!Number.isFinite(result)) {
+    throw new Error('The result must be a valid finite number.');
+  }
+  return result;
+}
+
+function modulo(a, b) {
+  validateFiniteOperands(a, b);
+  if (b === 0) {
+    throw new Error('Cannot modulo by zero.');
+  }
+  return validateFiniteResult(a % b);
+}
+
+function power(base, exponent) {
+  validateFiniteOperands(base, exponent);
+  return validateFiniteResult(base ** exponent);
+}
+
+function squareRoot(n) {
+  validateFiniteOperands(n);
+  if (n < 0) {
+    throw new Error('Cannot take the square root of a negative number.');
+  }
+  return validateFiniteResult(Math.sqrt(n));
+}
+
 const operations = {
   '+': (left, right) => left + right,
   '-': (left, right) => left - right,
@@ -12,8 +46,8 @@ const operations = {
   '×': (left, right) => left * right,
   '/': (left, right) => left / right,
   '÷': (left, right) => left / right,
-  '%': (left, right) => left % right,
-  '**': (left, right) => left ** right,
+  '%': modulo,
+  '**': power,
 };
 const supportedOperations = [...Object.keys(operations), 'sqrt'];
 
@@ -22,33 +56,17 @@ function calculate(left, operator, right) {
     throw new Error(`Choose one of the supported operations: ${supportedOperations.join(', ')}.`);
   }
 
-  if (!Number.isFinite(left)) {
-    throw new Error('Operands must be valid finite numbers.');
-  }
-
   if (operator === 'sqrt') {
-    if (left < 0) {
-      throw new Error('Cannot take the square root of a negative number.');
-    }
-    return Math.sqrt(left);
+    return squareRoot(left);
   }
 
-  if (!Number.isFinite(right)) {
-    throw new Error('Operands must be valid finite numbers.');
-  }
+  validateFiniteOperands(left, right);
 
   if ((operator === '/' || operator === '÷') && right === 0) {
     throw new Error('Cannot divide by zero.');
   }
-  if (operator === '%' && right === 0) {
-    throw new Error('Cannot modulo by zero.');
-  }
 
-  const result = operations[operator](left, right);
-  if (!Number.isFinite(result)) {
-    throw new Error('The result must be a valid finite number.');
-  }
-  return result;
+  return validateFiniteResult(operations[operator](left, right));
 }
 
 function parseOperand(input) {
@@ -121,4 +139,4 @@ if (require.main === module) {
   main();
 }
 
-module.exports = { calculate };
+module.exports = { calculate, modulo, power, squareRoot };
